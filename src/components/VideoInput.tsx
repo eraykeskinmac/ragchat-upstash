@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 interface VideoInputProps {
-  onVideoProcess: (videoInfo: any, transcript: any[]) => void;
+  onVideoProcess: (videoInfo: any, transcript: any[], summary: string) => void;
 }
 
 export default function VideoInput({ onVideoProcess }: VideoInputProps) {
@@ -12,9 +12,9 @@ export default function VideoInput({ onVideoProcess }: VideoInputProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoUrl) return;
-
     setIsLoading(true);
     setError(null);
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -28,10 +28,10 @@ export default function VideoInput({ onVideoProcess }: VideoInputProps) {
       if (data.error) {
         throw new Error(data.error);
       }
-      if (!data.videoInfo || !data.transcript) {
+      if (!data.videoInfo || !data.transcript || !data.summary) {
         throw new Error("Invalid response from server");
       }
-      onVideoProcess(data.videoInfo, data.transcript);
+      onVideoProcess(data.videoInfo, data.transcript, data.summary);
     } catch (error) {
       console.error("Error processing video:", error);
       setError(

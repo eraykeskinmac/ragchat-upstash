@@ -47,17 +47,34 @@ export class RagChatService {
     await this.clearPreviousData();
     this.currentVideoId = videoId;
 
-    const content = `
+    let content = `
       Title: ${videoInfo.title}
       Description: ${videoInfo.description}
-      Transcript: ${transcript.map((t) => t.text).join(" ")}
     `;
+
+    if (transcript.length > 0) {
+      content += `\nTranscript: ${transcript.map((t) => t.text).join(" ")}`;
+    } else {
+      content += `\nNo transcript available. Video duration: ${videoInfo.duration}`;
+    }
 
     await this.ragChat.context.add({
       type: "text",
       data: content,
       id: videoId,
     });
+
+    // Generate a summary of the video content
+    const summary = await this.generateSummary(content);
+
+    return summary;
+  }
+
+  private async generateSummary(content: string): Promise<string> {
+    const response = await this.ragChat.chat(
+      "Please provide a brief summary of this video content in about 3-5 sentences."
+    );
+    return response.output;
   }
 
   async chat(message: string) {

@@ -10,35 +10,24 @@ export async function POST(req: NextRequest) {
 
   try {
     if (body.videoUrl) {
-      console.log("Processing video URL:", body.videoUrl);
       const videoId = getVideoIdFromUrl(body.videoUrl);
-      console.log("Extracted Video ID:", videoId);
-
       const [videoInfo, transcript] = await Promise.all([
         getVideoInfo(videoId),
         getTranscript(videoId),
       ]);
-      console.log("Video Info:", JSON.stringify(videoInfo, null, 2));
-      console.log(
-        "Transcript (first 3 items):",
-        JSON.stringify(transcript.slice(0, 3), null, 2),
-      );
 
-      await ragChatService.addContext(videoId, videoInfo, transcript);
-      console.log("Context added to RAGChat successfully");
+      const summary = await ragChatService.addContext(videoId, videoInfo, transcript);
 
       return NextResponse.json({
         message: "Video processed successfully",
-        videoInfo,
-        transcript: transcript.slice(0, 5),
+        videoInfo: { ...videoInfo, id: videoId },
+        transcript: transcript.slice(0, 5), // Sending only a preview
+        summary,
       });
-    } else if (body.message) {
-      console.log("Received chat message:", body.message);
-      const response = await ragChatService.chat(body.message);
-      console.log("Chat response:", response);
+    } else if (body.message && body.videoId) {
+      const response = await ragChatService.chat(body.message, body.videoId);
       return NextResponse.json({ response: response.output });
     } else {
-      console.error("Invalid request body:", body);
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
   } catch (error) {

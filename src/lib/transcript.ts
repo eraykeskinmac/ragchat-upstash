@@ -1,4 +1,5 @@
 import { YoutubeTranscript } from "youtube-transcript";
+import { getVideoInfo } from "./youtubeApi";
 
 interface TranscriptSegment {
   text: string;
@@ -7,7 +8,7 @@ interface TranscriptSegment {
 }
 
 export async function getTranscript(
-  videoId: string,
+  videoId: string
 ): Promise<TranscriptSegment[]> {
   console.log("Fetching transcript for video ID:", videoId);
   try {
@@ -15,24 +16,26 @@ export async function getTranscript(
     console.log(
       "Transcript (first 3 items):",
       JSON.stringify(transcript.slice(0, 3), null, 2),
-      "...",
+      "..."
     );
-
-    if (!Array.isArray(transcript) || transcript.length === 0) {
-      throw new Error("Invalid or empty transcript data received");
-    }
-
     return transcript.map((item) => ({
       text: item.text,
       start: item.start,
       duration: item.duration,
     }));
   } catch (error) {
-    console.error("Error fetching transcript:", error);
-    throw new Error(
-      `Failed to fetch transcript: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
+    console.warn("Error fetching transcript:", error);
+    console.log("Falling back to video metadata...");
+
+    // Fallback to video metadata
+    const videoInfo = await getVideoInfo(videoId);
+    const fallbackTranscript: TranscriptSegment[] = [
+      {
+        text: `Title: ${videoInfo.title}\nDescription: ${videoInfo.description}`,
+        start: 0,
+        duration: 0,
+      },
+    ];
+    return fallbackTranscript;
   }
 }

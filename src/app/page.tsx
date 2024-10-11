@@ -8,12 +8,15 @@ export default function Home() {
   const [videoProcessed, setVideoProcessed] = useState(false);
   const [videoInfo, setVideoInfo] = useState<any>(null);
   const [transcript, setTranscript] = useState<any[]>([]);
+  const [summary, setSummary] = useState<string>("");
 
-  const handleVideoProcess = (videoInfo: any, transcript: any[]) => {
+  const handleVideoProcess = (videoInfo: any, transcript: any[], summary: string) => {
     console.log("Video processed:", videoInfo);
     console.log("Transcript:", transcript);
+    console.log("Summary:", summary);
     setVideoInfo(videoInfo);
     setTranscript(transcript);
+    setSummary(summary);
     setVideoProcessed(true);
   };
 
@@ -33,9 +36,11 @@ export default function Home() {
           <p>
             <strong>Transcript Length:</strong> {transcript.length} segments
           </p>
+          <h3 className="text-lg font-semibold mt-2">Video Summary</h3>
+          <p>{summary}</p>
         </div>
       )}
-      {videoProcessed && <ChatInterface />}
+      {videoProcessed && <ChatInterface videoId={videoInfo?.id} />}
     </main>
   );
 }
